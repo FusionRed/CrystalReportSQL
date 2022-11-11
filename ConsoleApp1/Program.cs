@@ -9,8 +9,7 @@ namespace CrystalReportSQL
     {
         static void Main(string[] args)
         {
-            //foreach (string file in Directory.GetFiles(@"C:\Users\jwmcc\OneDrive\Documents\Epic\Customers\NYC H+H\Crystal Reports", "*.rpt"))
-            Console.WriteLine(String.Format("Enter the file pathway:"));
+            Console.WriteLine(String.Format("Enter .rpt source file(s) pathway:"));
             string pathway = Console.ReadLine();
             if (Directory.Exists(pathway))
             {
@@ -34,7 +33,7 @@ namespace CrystalReportSQL
                             Console.ReadKey();
                             System.Environment.Exit(0);
                         }
-                     }
+                    }
                     foreach (string file in Directory.GetFiles(pathway, "*.rpt"))
                     {
                         var doc = new CrystalDecisions.CrystalReports.Engine.ReportDocument();
@@ -52,9 +51,6 @@ namespace CrystalReportSQL
                                 {
                                     string commandSql = table.CommandText;
                                     Console.WriteLine(String.Format("Writing SQL for {0}", filename));
-                                    //Console.WriteLine(String.Format("{0}", commandSql));
-                                    //Console.WriteLine("\n--------------------------------------------------------------------------------");
-                                    //Console.WriteLine("{0}", newfile);
                                     sw.WriteLine(commandSql);
                                 }
                                 else
@@ -67,7 +63,20 @@ namespace CrystalReportSQL
                         doc.Close();
                     }
                 }
-                else Console.WriteLine(String.Format("No .rpt files in pathway: {0}", pathway));
+                else
+                {
+                    Console.WriteLine(String.Format("No .rpt files in pathway: {0}", pathway));
+                    Console.WriteLine("\n Press any key to exit...");
+                    Console.ReadKey();
+                    System.Environment.Exit(0);
+                }
+            }
+            else
+            {
+                Console.WriteLine(String.Format("The pathway: {0} does not exist.  Please check your pathway and try again.", pathway));
+                Console.WriteLine("\n Press any key to exit...");
+                Console.ReadKey();
+                System.Environment.Exit(0);
             }
         }
     }
