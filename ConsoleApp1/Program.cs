@@ -8,6 +8,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Web.UI.WebControls;
+using System.Text.RegularExpressions;
 
 namespace CrystalReportSQL
 {
@@ -62,6 +63,12 @@ namespace CrystalReportSQL
                             int end = file.LastIndexOf(".");
                             var length = (end - start) - 1;
                             string filename = file.Substring(start + 1, length);
+                            StringBuilder sb = new StringBuilder(filename);
+                            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+                            {
+                                sb.Replace(invalidChar, '_');
+                            }
+                            filename = sb.ToString();
                             using (var sw = new StreamWriter(String.Concat(pathway, "\\Report\\", filename, ".txt"), true, Encoding.Unicode))
                             {
                                 foreach (dynamic table in doc.ReportClientDocument.DatabaseController.Database.Tables)
@@ -85,7 +92,13 @@ namespace CrystalReportSQL
                             foreach (string subName in doc.ReportClientDocument.SubreportController.GetSubreportNames())
                             {
                                 CrystalDecisions.ReportAppServer.Controllers.SubreportClientDocument subRCD = doc.ReportClientDocument.SubreportController.GetSubreport(subName);
-                                using (var sw = new StreamWriter(String.Concat(pathway, "\\SubReport\\", filename, "-", subName, ".txt"), true, Encoding.Unicode))
+                                StringBuilder ssb = new StringBuilder(subName);
+                                foreach (var invalidChar in Path.GetInvalidFileNameChars())
+                                {
+                                    ssb.Replace(invalidChar, '_');
+                                }
+                                string subfilename = ssb.ToString();
+                                using (var sw = new StreamWriter(String.Concat(pathway, "\\SubReport\\", filename, "-", subfilename, ".txt"), true, Encoding.Unicode))
                                 {
                                     var boDatabase = subRCD.DataDefController.Database;
                                     foreach (dynamic subtable in boDatabase.Tables)
@@ -93,13 +106,13 @@ namespace CrystalReportSQL
                                         if (subtable.ClassName == "CrystalReports.CommandTable")
                                         {
                                             string commandSql = subtable.CommandText;
-                                            Console.WriteLine(String.Format("Writing SQL for {0} sub-report...", subName));
+                                            Console.WriteLine(String.Format("Writing SQL for {0} Report {1} sub-report...", filename, subfilename));
                                             sw.WriteLine(commandSql);
                                         }
                                         else
                                         {
                                             string tableSql = subtable.Name;
-                                            Console.WriteLine(String.Format("Writing tables for {0} sub-report...", subName));
+                                            Console.WriteLine(String.Format("Writing tables for {0} Report {1} sub-report...", filename,subfilename));
                                             sw.WriteLine(tableSql);
                                         }
                                     }
