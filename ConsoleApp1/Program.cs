@@ -26,11 +26,23 @@ namespace CrystalReportSQL
                 }
                 if (cnt > 0)
                 {
-                    if (!Directory.Exists(String.Concat(pathway, "\\SQL\\")))
+                    if (!Directory.Exists(String.Concat(pathway, "\\Report\\")))
                     {
                         try
                         {
                             Directory.CreateDirectory(String.Concat(pathway, "\\Report\\"));
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Unable to create output folders.  Create folders for \\Report\\ and \\SubReport\\ in the file pathway, then try again. Exception: { 0}", e.ToString());
+                            Console.WriteLine("\nPress any key to exit...");
+                            Console.ReadKey();
+                            System.Environment.Exit(0);
+                        }
+                    if (!Directory.Exists(String.Concat(pathway, "\\SubReport\\")))
+                    {
+                        try
+                        {
                             Directory.CreateDirectory(String.Concat(pathway, "\\SubReport\\"));
                         }
                         catch (Exception e)
