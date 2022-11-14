@@ -1,4 +1,9 @@
-﻿using System;
+﻿using CrystalDecisions.CrystalReports.Engine;
+using CrystalDecisions.ReportAppServer.ClientDoc;
+using CrystalDecisions.ReportAppServer.Controllers;
+using CrystalDecisions.ReportAppServer.DataDefModel;
+using CrystalDecisions;
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -24,12 +29,13 @@ namespace CrystalReportSQL
                     {
                         try
                         {
-                            Directory.CreateDirectory(String.Concat(pathway, "\\SQL\\"));
+                            Directory.CreateDirectory(String.Concat(pathway, "\\Report\\SQL\\"));
+                            Directory.CreateDirectory(String.Concat(pathway, "\\SubReport\\SQL\\"));
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine("Unable to create output pathway.  Create \\SQL\\ folder in filepath, then try again. Exception: { 0}", e.ToString());
-                            Console.WriteLine("\n Press any key to exit...");
+                            Console.WriteLine("\nPress any key to exit...");
                             Console.ReadKey();
                             System.Environment.Exit(0);
                         }
@@ -43,22 +49,52 @@ namespace CrystalReportSQL
                         int end = file.LastIndexOf(".");
                         var length = (end - start) - 1;
                         string filename = file.Substring(start + 1, length);
-                        using (var sw = new StreamWriter(String.Concat(pathway, "\\SQL\\", filename, ".sql"), true, Encoding.Unicode))
+                        using (var sw = new StreamWriter(String.Concat(pathway, "\\Report\\SQL\\", filename, ".sql"), true, Encoding.Unicode))
                         {
                             foreach (dynamic table in doc.ReportClientDocument.DatabaseController.Database.Tables)
                             {
                                 if (table.ClassName == "CrystalReports.CommandTable")
                                 {
                                     string commandSql = table.CommandText;
-                                    Console.WriteLine(String.Format("Writing SQL for {0}", filename));
+                                    Console.WriteLine(String.Format("Writing SQL for {0}...", filename));
                                     sw.WriteLine(commandSql);
                                 }
                                 else
                                 {
                                     string tableSql = table.Name;
+                                    Console.WriteLine(String.Format("Writing tables for {0}...", filename));
+                                    sw.WriteLine(tableSql);
                                 }
                             }
                             sw.Close();
+                        }
+                        Console.WriteLine(String.Format("Processing {0} for sub-reports...", file));
+                        if (doc.ReportClientDocument.SubreportController.GetSubreportNames() != null)
+                        {
+                            foreach (string subName in doc.ReportClientDocument.SubreportController.GetSubreportNames())
+                            {
+                                CrystalDecisions.ReportAppServer.Controllers.SubreportClientDocument subRCD = doc.ReportClientDocument.SubreportController.GetSubreport(subName);
+                                using (var sw = new StreamWriter(String.Concat(pathway, "\\SubReport\\SQL\\",filename,"-", subName, ".sql"), true, Encoding.Unicode))
+                                {
+                                    var boDatabase = subRCD.DataDefController.Database;
+                                    foreach (dynamic subtable in boDatabase.Tables)
+                                    {
+                                        if (subtable.ClassName == "CrystalReports.CommandTable")
+                                        {
+                                            string commandSql = subtable.CommandText;
+                                            Console.WriteLine(String.Format("Writing SQL for {0} sub-report...", subName));
+                                            sw.WriteLine(commandSql);
+                                        }
+                                        else
+                                        {
+                                            string tableSql = subtable.Name;
+                                            Console.WriteLine(String.Format("Writing tables for {0} sub-report...", subName));
+                                            sw.WriteLine(tableSql);
+                                        }
+                                    }
+                                    sw.Close();
+                                }
+                            }
                         }
                         doc.Close();
                     }
@@ -66,7 +102,7 @@ namespace CrystalReportSQL
                 else
                 {
                     Console.WriteLine(String.Format("No .rpt files in pathway: {0}", pathway));
-                    Console.WriteLine("\n Press any key to exit...");
+                    Console.WriteLine("\nPress any key to exit...");
                     Console.ReadKey();
                     System.Environment.Exit(0);
                 }
@@ -74,10 +110,12 @@ namespace CrystalReportSQL
             else
             {
                 Console.WriteLine(String.Format("The pathway: {0} does not exist.  Please check your pathway and try again.", pathway));
-                Console.WriteLine("\n Press any key to exit...");
+                Console.WriteLine("\nPress any key to exit...");
                 Console.ReadKey();
                 System.Environment.Exit(0);
             }
+            Console.WriteLine("\nDone processing report files.  Press any key to exit...");
+            Console.ReadKey();
         }
     }
 }
